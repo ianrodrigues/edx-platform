@@ -74,7 +74,7 @@ class RegistrationFactory(DjangoModelFactory):
 class UserFactory(DjangoModelFactory):
     class Meta(object):
         model = User
-        django_get_or_create = ('email', 'username')
+        django_get_or_create = ('username', )
 
     _DEFAULT_PASSWORD = 'test'
 
