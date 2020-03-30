@@ -1,9 +1,14 @@
 ## mako
 
 <%page expression_filter="h"/>
+<%!
+from django.utils.translation import ugettext as _
+%>
 
 <%namespace name="static" file="../../static_content.html"/>
-
+% if display_reset_dates_banner:
+    <%include file="/reset_deadlines_banner.html" />
+% endif
 % for course_date in course_date_blocks:
     <%include file="../dates-summary.html" args="course_date=course_date"/>
 % endfor

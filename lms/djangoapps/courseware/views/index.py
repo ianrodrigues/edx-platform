@@ -51,6 +51,7 @@ from openedx.features.course_experience import (
     RELATIVE_DATES_FLAG,
 )
 from openedx.features.course_experience.utils import get_course_outline_block_tree
+from openedx.features.course_experience.utils import reset_deadlines_banner_should_display
 from openedx.features.course_experience.views.course_sock import CourseSockFragmentView
 from openedx.features.enterprise_support.api import data_sharing_consent_required
 from shoppingcart.models import CourseRegistrationCode
@@ -462,25 +463,8 @@ class CoursewareIndex(View):
 
         allow_anonymous = allow_public_access(self.course, [COURSE_VISIBILITY_PUBLIC])
         display_reset_dates_banner = False
-        if not allow_anonymous and RELATIVE_DATES_FLAG.is_enabled(self.course.id):  # pylint: disable=too-many-nested-blocks
-            course_overview = CourseOverview.objects.get(id=str(self.course_key))
-            end_date = getattr(course_overview, 'end_date')
-            if course_overview.self_paced and (not end_date or timezone.now() < end_date):
-                if (CourseEnrollment.objects.filter(
-                    course=course_overview, user=request.user, mode=CourseMode.VERIFIED
-                ).exists()):
-                    course_block_tree = get_course_outline_block_tree(
-                        request, str(self.course_key), request.user
-                    )
-                    course_sections = course_block_tree.get('children', [])
-                    for section in course_sections:
-                        if display_reset_dates_banner:
-                            break
-                        for subsection in section.get('children', []):
-                            if (not subsection.get('complete', True)
-                                    and subsection.get('due', timezone.now() + timedelta(1)) < timezone.now()):
-                                display_reset_dates_banner = True
-                                break
+        if not allow_anonymous and RELATIVE_DATES_FLAG.is_enabled(self.course.id):
+            display_reset_dates_banner = reset_deadlines_banner_should_display(self.course_key, request)
 
         courseware_context = {
             'csrf': csrf(self.request)['csrf_token'],
