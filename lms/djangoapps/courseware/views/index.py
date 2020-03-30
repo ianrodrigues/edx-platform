@@ -457,14 +457,15 @@ class CoursewareIndex(View):
         )
         staff_access = self.is_staff
 
-        reset_deadlines_url = reverse(
-            'openedx.course_experience.reset_course_deadlines', kwargs={'course_id': six.text_type(self.course.id)}
-        )
-
         allow_anonymous = allow_public_access(self.course, [COURSE_VISIBILITY_PUBLIC])
         display_reset_dates_banner = False
         if not allow_anonymous and RELATIVE_DATES_FLAG.is_enabled(self.course.id):
             display_reset_dates_banner = reset_deadlines_banner_should_display(self.course_key, request)
+
+        reset_deadlines_url = reverse('openedx.course_experience.reset_course_deadlines') if (
+            display_reset_dates_banner) else None
+
+        reset_deadlines_redirect_url_base = 'openedx.course_experience.course_home' if reset_deadlines_url else None
 
         courseware_context = {
             'csrf': csrf(self.request)['csrf_token'],
@@ -489,6 +490,8 @@ class CoursewareIndex(View):
             'show_search': show_search,
             'relative_dates_is_enabled': RELATIVE_DATES_FLAG.is_enabled(self.course.id),
             'reset_deadlines_url': reset_deadlines_url,
+            'reset_deadlines_redirect_url_base': reset_deadlines_redirect_url_base,
+            'reset_deadlines_redirect_url_id': self.course.id,
             'display_reset_dates_banner': display_reset_dates_banner,
         }
         courseware_context.update(

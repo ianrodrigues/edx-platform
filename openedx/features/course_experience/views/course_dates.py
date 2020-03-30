@@ -92,10 +92,14 @@ class CourseDatesFragmentMobileView(CourseDatesFragmentView):
             'openedx.course_experience.reset_course_deadlines', kwargs={'course_id': six.text_type(course.id)}
         ) if display_reset_dates_banner else None
 
+        reset_deadlines_redirect_url = 'openedx.course_experience.mobile_dates_fragment_view' if (
+            reset_deadlines_url) else None
+
         context = {
             'course_date_blocks': [block for block in course_date_blocks if block.title != 'current_datetime'],
             'display_reset_dates_banner': display_reset_dates_banner,
-            'reset_deadlines_url': reset_deadlines_url
+            'reset_deadlines_url': reset_deadlines_url,
+            'reset_deadlines_redirect_url': reset_deadlines_redirect_url
         }
         html = render_to_string(self.template_name, context)
         dates_fragment = Fragment(html)

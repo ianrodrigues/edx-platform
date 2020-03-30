@@ -732,10 +732,6 @@ class CourseTabView(EdxFragmentView):
         else:
             masquerade = None
 
-        reset_deadlines_url = reverse(
-            'openedx.course_experience.reset_course_deadlines', kwargs={'course_id': text_type(course.id)}
-        )
-
         display_reset_dates_banner = False
         if RELATIVE_DATES_FLAG.is_enabled(course.id):
             course_overview = CourseOverview.get_from_id(course.id)
@@ -744,6 +740,12 @@ class CourseTabView(EdxFragmentView):
                 course=course_overview, user=request.user, mode=CourseMode.VERIFIED
             ).exists()):
                 display_reset_dates_banner = True
+
+        reset_deadlines_url = reverse(
+            'openedx.course_experience.reset_course_deadlines'
+        ) if display_reset_dates_banner else None
+
+        reset_deadlines_redirect_url_base = 'openedx.course_experience.course_home' if reset_deadlines_url else None
 
         context = {
             'course': course,
@@ -755,8 +757,10 @@ class CourseTabView(EdxFragmentView):
             'uses_bootstrap': uses_bootstrap,
             'uses_pattern_library': not uses_bootstrap,
             'disable_courseware_js': True,
-            'reset_deadlines_url': reset_deadlines_url,
             'display_reset_dates_banner': display_reset_dates_banner,
+            'reset_deadlines_url': reset_deadlines_url,
+            'reset_deadlines_redirect_url_base': reset_deadlines_redirect_url_base,
+            'reset_deadlines_redirect_url_id': course.id
         }
         # Avoid Multiple Mathjax loading on the 'user_profile'
         if 'profile_page_context' in kwargs:
@@ -1659,9 +1663,10 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
         if RELATIVE_DATES_FLAG.is_enabled(course.id):
             display_reset_dates_banner = reset_deadlines_banner_should_display(course_key, request)
 
-        reset_deadlines_url = reverse(
-            'render_xblock', kwargs={'usage_key_string': usage_key_string}
-        ) if display_reset_dates_banner else None
+        reset_deadlines_url = reverse('openedx.course_experience.reset_course_deadlines') if (
+            display_reset_dates_banner) else None
+
+        reset_deadlines_redirect_url_base = 'render_xblock' if reset_deadlines_url else None
 
         context = {
             'fragment': block.render('student_view', context=student_view_context),
@@ -1676,7 +1681,9 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
             'staff_access': bool(request.user.has_perm(VIEW_XQA_INTERFACE, course)),
             'xqa_server': settings.FEATURES.get('XQA_SERVER', 'http://your_xqa_server.com'),
             'display_reset_dates_banner': display_reset_dates_banner,
-            'reset_deadlines_url': reset_deadlines_url
+            'reset_deadlines_url': reset_deadlines_url,
+            'reset_deadlines_redirect_url_base': reset_deadlines_redirect_url_base,
+            'reset_deadlines_redirect_url_id': usage_key_string
         }
         return render_to_response('courseware/courseware-chromeless.html', context)
 
