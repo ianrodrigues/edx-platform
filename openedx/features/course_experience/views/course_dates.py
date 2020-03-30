@@ -57,7 +57,6 @@ class CourseDatesFragmentMobileView(CourseDatesFragmentView):
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             raise Http404
-        print('****************', CourseDatesFragmentMobileView.__dict__)
         return super(CourseDatesFragmentMobileView, self).get(request, *args, **kwargs)
 
     def css_dependencies(self):
@@ -69,9 +68,13 @@ class CourseDatesFragmentMobileView(CourseDatesFragmentView):
         the files are loaded individually, but in production just the single bundle is loaded.
         """
         if get_language_bidi():
-            return self.get_css_dependencies('style-mobile-rtl')
+            a = self.get_css_dependencies('style-mobile-rtl')
+            print('************', a)
+            return a
         else:
-            return self.get_css_dependencies('style-mobile')
+            b = self.get_css_dependencies('style-mobile')
+            print('************', b)
+            return b
 
     def render_to_fragment(self, request, course_id=None, **kwargs):
         """
