@@ -180,4 +180,5 @@ def reset_course_deadlines(request, course_id):
     else:
         user = request.user
     reset_self_paced_schedule(user, course_key)
-    return redirect(reverse('openedx.course_experience.course_home', args=[six.text_type(course_key)]))
+    redirect_url = request.POST.get('redirect_url', 'openedx.course_experience.course_home')
+    return redirect(reverse(redirect_url, args=[six.text_type(course_key)]))

@@ -8,6 +8,8 @@ import six
 from django.http import Http404
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.translation import get_language_bidi
 from opaque_keys.edx.keys import CourseKey
 from web_fragments.fragment import Fragment
@@ -54,6 +56,7 @@ class CourseDatesFragmentMobileView(CourseDatesFragmentView):
     """
     template_name = 'course_experience/mobile/course-dates-fragment.html'
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             raise Http404
@@ -68,13 +71,9 @@ class CourseDatesFragmentMobileView(CourseDatesFragmentView):
         the files are loaded individually, but in production just the single bundle is loaded.
         """
         if get_language_bidi():
-            a = self.get_css_dependencies('style-mobile-rtl')
-            print('************', a)
-            return a
+            return self.get_css_dependencies('style-mobile-rtl')
         else:
-            b = self.get_css_dependencies('style-mobile')
-            print('************', b)
-            return b
+            return self.get_css_dependencies('style-mobile')
 
     def render_to_fragment(self, request, course_id=None, **kwargs):
         """
@@ -90,7 +89,7 @@ class CourseDatesFragmentMobileView(CourseDatesFragmentView):
             display_reset_dates_banner = reset_deadlines_banner_should_display(course_key, request)
 
         reset_deadlines_url = reverse(
-            'openedx.course_experience.mobile_dates_fragment_view', kwargs={'course_id': six.text_type(course.id)}
+            'openedx.course_experience.reset_course_deadlines', kwargs={'course_id': six.text_type(course.id)}
         ) if display_reset_dates_banner else None
 
         context = {

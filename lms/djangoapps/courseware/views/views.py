@@ -115,6 +115,7 @@ from openedx.features.course_experience import (
     RELATIVE_DATES_FLAG,
 )
 from openedx.features.course_experience.course_tools import CourseToolsPluginManager
+from openedx.features.course_experience.utils import reset_deadlines_banner_should_display
 from openedx.features.course_experience.views.course_dates import CourseDatesFragmentView
 from openedx.features.course_experience.waffle import ENABLE_COURSE_ABOUT_SIDEBAR_HTML
 from openedx.features.course_experience.waffle import waffle as course_experience_waffle
@@ -1654,6 +1655,14 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
                     'mark-completed-on-view-after-delay': completion_service.get_complete_on_view_delay_ms()
                 }
 
+        display_reset_dates_banner = False
+        if RELATIVE_DATES_FLAG.is_enabled(course.id):
+            display_reset_dates_banner = reset_deadlines_banner_should_display(course_key, request)
+
+        reset_deadlines_url = reverse(
+            'render_xblock', kwargs={'usage_key_string': usage_key_string}
+        ) if display_reset_dates_banner else None
+
         context = {
             'fragment': block.render('student_view', context=student_view_context),
             'course': course,
@@ -1666,6 +1675,8 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
             'edx_notes_enabled': is_feature_enabled(course, request.user),
             'staff_access': bool(request.user.has_perm(VIEW_XQA_INTERFACE, course)),
             'xqa_server': settings.FEATURES.get('XQA_SERVER', 'http://your_xqa_server.com'),
+            'display_reset_dates_banner': display_reset_dates_banner,
+            'reset_deadlines_url': reset_deadlines_url
         }
         return render_to_response('courseware/courseware-chromeless.html', context)
 
